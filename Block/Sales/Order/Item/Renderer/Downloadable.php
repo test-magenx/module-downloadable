@@ -8,7 +8,6 @@ namespace Magento\Downloadable\Block\Sales\Order\Item\Renderer;
 
 use Magento\Downloadable\Model\Link;
 use Magento\Downloadable\Model\Link\Purchased;
-use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\ScopeInterface;
 
 /**
@@ -33,10 +32,6 @@ class Downloadable extends \Magento\Sales\Block\Order\Item\Renderer\DefaultRende
      * @var \Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFactory
      */
     protected $_itemsFactory;
-    /**
-     * @var \Magento\Downloadable\Model\Sales\Order\Link\Purchased
-     */
-    private $purchasedLink;
 
     /**
      * @param \Magento\Framework\View\Element\Template\Context $context
@@ -45,7 +40,6 @@ class Downloadable extends \Magento\Sales\Block\Order\Item\Renderer\DefaultRende
      * @param \Magento\Downloadable\Model\Link\PurchasedFactory $purchasedFactory
      * @param \Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFactory $itemsFactory
      * @param array $data
-     * @param \Magento\Downloadable\Model\Sales\Order\Link\Purchased|null $purchasedLink
      */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
@@ -53,31 +47,32 @@ class Downloadable extends \Magento\Sales\Block\Order\Item\Renderer\DefaultRende
         \Magento\Catalog\Model\Product\OptionFactory $productOptionFactory,
         \Magento\Downloadable\Model\Link\PurchasedFactory $purchasedFactory,
         \Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFactory $itemsFactory,
-        array $data = [],
-        ?\Magento\Downloadable\Model\Sales\Order\Link\Purchased $purchasedLink = null
+        array $data = []
     ) {
         $this->_purchasedFactory = $purchasedFactory;
         $this->_itemsFactory = $itemsFactory;
         parent::__construct($context, $string, $productOptionFactory, $data);
-        $this->purchasedLink = $purchasedLink
-            ?? ObjectManager::getInstance()->get(\Magento\Downloadable\Model\Sales\Order\Link\Purchased::class);
     }
 
     /**
-     * Get purchased link
-     *
      * @return Purchased
      */
     public function getLinks()
     {
-        $this->_purchasedLinks = $this->purchasedLink->getLink($this->getOrderItem());
+        $this->_purchasedLinks = $this->_purchasedFactory->create()->load(
+            $this->getOrderItem()->getId(),
+            'order_item_id'
+        );
+        $purchasedItems = $this->_itemsFactory->create()->addFieldToFilter(
+            'order_item_id',
+            $this->getOrderItem()->getId()
+        );
+        $this->_purchasedLinks->setPurchasedItems($purchasedItems);
 
         return $this->_purchasedLinks;
     }
 
     /**
-     * Get purchased link title
-     *
      * @return string
      */
     public function getLinksTitle()

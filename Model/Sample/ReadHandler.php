@@ -9,7 +9,7 @@ use Magento\Downloadable\Api\SampleRepositoryInterface as SampleRepository;
 use Magento\Framework\EntityManager\Operation\ExtensionInterface;
 
 /**
- * Read Handler for Downloadable Product Samples.
+ * Class ReadHandler
  */
 class ReadHandler implements ExtensionInterface
 {
@@ -27,8 +27,6 @@ class ReadHandler implements ExtensionInterface
     }
 
     /**
-     * Read Downloadable Samples for the provided Entity.
-     *
      * @param object $entity
      * @param array $arguments
      * @return \Magento\Catalog\Api\Data\ProductInterface|object
@@ -42,9 +40,10 @@ class ReadHandler implements ExtensionInterface
         }
         $entityExtension = $entity->getExtensionAttributes();
         $samples = $this->sampleRepository->getSamplesByProduct($entity);
-        $entityExtension->setDownloadableProductSamples($samples);
+        if ($samples) {
+            $entityExtension->setDownloadableProductSamples($samples);
+        }
         $entity->setExtensionAttributes($entityExtension);
-
         return $entity;
     }
 }

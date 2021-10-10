@@ -17,19 +17,7 @@ define([
      */
     $.widget('mage.downloadable', {
         options: {
-            priceHolderSelector: '.price-box',
-            linkElement: '',
-            allElements: ''
-        },
-
-        /**
-         * @inheritdoc
-         */
-        _init: function initLinks() {
-            var element = this.element,
-                options = $(this.options.linkElement, element);
-
-            options.trigger('change');
+            priceHolderSelector: '.price-box'
         },
 
         /**

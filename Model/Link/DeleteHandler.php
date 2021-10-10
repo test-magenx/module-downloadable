@@ -9,7 +9,7 @@ use Magento\Downloadable\Api\LinkRepositoryInterface as LinkRepository;
 use Magento\Framework\EntityManager\Operation\ExtensionInterface;
 
 /**
- * Delete Handler for Downloadable Product Links.
+ * Class DeleteHandler
  */
 class DeleteHandler implements ExtensionInterface
 {
@@ -27,8 +27,6 @@ class DeleteHandler implements ExtensionInterface
     }
 
     /**
-     * Delete Downloadable Links for the provided Product.
-     *
      * @param object $entity
      * @param array $arguments
      * @return \Magento\Catalog\Api\Data\ProductInterface|object
@@ -43,8 +41,6 @@ class DeleteHandler implements ExtensionInterface
         foreach ($this->linkRepository->getList($entity->getSku()) as $link) {
             $this->linkRepository->delete($link->getId());
         }
-        $entity->setDownloadableLinks(null);
-
         return $entity;
     }
 }

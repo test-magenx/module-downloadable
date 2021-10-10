@@ -9,7 +9,6 @@ namespace Magento\Downloadable\Block\Sales\Order\Email\Items;
 use Magento\Downloadable\Model\Link;
 use Magento\Downloadable\Model\Link\Purchased;
 use Magento\Downloadable\Model\Link\Purchased\Item;
-use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\ScopeInterface;
 
 /**
@@ -40,10 +39,6 @@ class Downloadable extends \Magento\Sales\Block\Order\Email\Items\DefaultItems
      * @since 100.1.0
      */
     protected $frontendUrlBuilder;
-    /**
-     * @var \Magento\Downloadable\Model\Sales\Order\Link\Purchased
-     */
-    private $purchasedLink;
 
     /**
      * @param \Magento\Framework\View\Element\Template\Context $context
@@ -51,22 +46,18 @@ class Downloadable extends \Magento\Sales\Block\Order\Email\Items\DefaultItems
      * @param \Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFactory $itemsFactory
      * @param \Magento\Framework\Url $frontendUrlBuilder
      * @param array $data
-     * @param \Magento\Downloadable\Model\Sales\Order\Link\Purchased|null $purchasedLink
      */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
         \Magento\Downloadable\Model\Link\PurchasedFactory $purchasedFactory,
         \Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFactory $itemsFactory,
         \Magento\Framework\Url $frontendUrlBuilder,
-        array $data = [],
-        ?\Magento\Downloadable\Model\Sales\Order\Link\Purchased $purchasedLink = null
+        array $data = []
     ) {
         $this->_purchasedFactory = $purchasedFactory;
         $this->_itemsFactory = $itemsFactory;
         $this->frontendUrlBuilder = $frontendUrlBuilder;
         parent::__construct($context, $data);
-        $this->purchasedLink = $purchasedLink
-            ?? ObjectManager::getInstance()->get(\Magento\Downloadable\Model\Sales\Order\Link\Purchased::class);
     }
 
     /**
@@ -76,7 +67,15 @@ class Downloadable extends \Magento\Sales\Block\Order\Email\Items\DefaultItems
      */
     public function getLinks()
     {
-        $this->_purchased = $this->purchasedLink->getLink($this->getItem());
+        $this->_purchased = $this->_purchasedFactory->create()->load(
+            $this->getItem()->getOrderItemId(),
+            'order_item_id'
+        );
+        $purchasedLinks = $this->_itemsFactory->create()->addFieldToFilter(
+            'order_item_id',
+            $this->getItem()->getOrderItemId()
+        );
+        $this->_purchased->setPurchasedItems($purchasedLinks);
 
         return $this->_purchased;
     }

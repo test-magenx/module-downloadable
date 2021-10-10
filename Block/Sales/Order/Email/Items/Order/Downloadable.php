@@ -38,47 +38,42 @@ class Downloadable extends \Magento\Sales\Block\Order\Email\Items\Order\DefaultO
      * @var \Magento\Framework\UrlInterface
      */
     private $frontendUrlBuilder;
-    /**
-     * @var \Magento\Downloadable\Model\Sales\Order\Link\Purchased
-     */
-    private $purchasedLink;
 
     /**
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param \Magento\Downloadable\Model\Link\PurchasedFactory $purchasedFactory
      * @param \Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFactory $itemsFactory
      * @param array $data
-     * @param \Magento\Downloadable\Model\Sales\Order\Link\Purchased|null $purchasedLink
      */
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
         \Magento\Downloadable\Model\Link\PurchasedFactory $purchasedFactory,
         \Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFactory $itemsFactory,
-        array $data = [],
-        ?\Magento\Downloadable\Model\Sales\Order\Link\Purchased $purchasedLink = null
+        array $data = []
     ) {
         $this->_purchasedFactory = $purchasedFactory;
         $this->_itemsFactory = $itemsFactory;
         parent::__construct($context, $data);
-        $this->purchasedLink = $purchasedLink
-            ?? ObjectManager::getInstance()->get(\Magento\Downloadable\Model\Sales\Order\Link\Purchased::class);
     }
 
     /**
-     * Get purchased link
+     * Enter description here...
      *
      * @return \Magento\Downloadable\Model\Link\Purchased
      */
     public function getLinks()
     {
-        $this->_purchased = $this->purchasedLink->getLink($this->getItem());
+        $this->_purchased = $this->_purchasedFactory->create()->load(
+            $this->getItem()->getId(),
+            'order_item_id'
+        );
+        $purchasedLinks = $this->_itemsFactory->create()->addFieldToFilter('order_item_id', $this->getItem()->getId());
+        $this->_purchased->setPurchasedItems($purchasedLinks);
 
         return $this->_purchased;
     }
 
     /**
-     * Get purchased link title
-     *
      * @return null|string
      */
     public function getLinksTitle()
@@ -90,8 +85,6 @@ class Downloadable extends \Magento\Sales\Block\Order\Email\Items\Order\DefaultO
     }
 
     /**
-     * Get download link for given link
-     *
      * @param Item $item
      * @return string
      */

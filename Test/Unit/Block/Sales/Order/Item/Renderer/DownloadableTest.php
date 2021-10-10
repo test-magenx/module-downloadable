@@ -55,15 +55,12 @@ class DownloadableTest extends TestCase
             ->setMethods(['create'])
             ->getMock();
 
-        $purchasedLink = new \Magento\Downloadable\Model\Sales\Order\Link\Purchased(
-            $this->purchasedFactory,
-            $this->itemsFactory
-        );
         $this->block = $objectManager->getObject(
             Downloadable::class,
             [
                 'context' => $contextMock,
-                'purchasedLink' => $purchasedLink
+                'purchasedFactory' => $this->purchasedFactory,
+                'itemsFactory' => $this->itemsFactory
             ]
         );
     }
