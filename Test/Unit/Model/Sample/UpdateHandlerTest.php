@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 declare(strict_types=1);
 
 namespace Magento\Downloadable\Test\Unit\Model\Sample;
@@ -70,7 +71,7 @@ class UpdateHandlerTest extends TestCase
     }
 
     /**
-     * Update samples for downloadable product.
+     * Update samples for downloadable product
      *
      * @return void
      */
@@ -119,7 +120,7 @@ class UpdateHandlerTest extends TestCase
     }
 
     /**
-     * Update samples for non downloadable product.
+     * Update samples for non downloadable product
      *
      * @return void
      */

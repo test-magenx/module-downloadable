@@ -29,14 +29,10 @@ use PHPUnit\Framework\TestCase;
  */
 class LinkTest extends TestCase
 {
-    /**
-     * @var Link
-     */
+    /** @var Link */
     protected $link;
 
-    /**
-     * @var ObjectManagerHelper
-     */
+    /** @var ObjectManagerHelper */
     protected $objectManagerHelper;
 
     /**
@@ -100,7 +96,6 @@ class LinkTest extends TestCase
     protected $urlInterface;
 
     /**
-     * @inheritDoc
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     protected function setUp(): void
@@ -175,10 +170,7 @@ class LinkTest extends TestCase
         );
     }
 
-    /**
-    * @return void
-    */
-    public function testAbsentLinkId(): void
+    public function testAbsentLinkId()
     {
         $this->objectManager->expects($this->once())
             ->method('get')
@@ -202,22 +194,35 @@ class LinkTest extends TestCase
         $this->assertEquals($this->response, $this->link->execute());
     }
 
-    /**
-    * @return void
-    */
-    public function testGetLinkForGuestCustomer(): void
+    public function testGetLinkForGuestCustomer()
     {
+        $this->objectManager->expects($this->at(0))
+            ->method('get')
+            ->with(Session::class)
+            ->willReturn($this->session);
         $this->request->expects($this->once())->method('getParam')->with('id', 0)->willReturn('some_id');
+        $this->objectManager->expects($this->at(1))
+            ->method('create')
+            ->with(Item::class)
+            ->willReturn($this->linkPurchasedItem);
         $this->linkPurchasedItem->expects($this->once())
             ->method('load')
             ->with('some_id', 'link_hash')
             ->willReturnSelf();
         $this->linkPurchasedItem->expects($this->once())->method('getId')->willReturn(5);
+        $this->objectManager->expects($this->at(2))
+            ->method('get')
+            ->with(Data::class)
+            ->willReturn($this->helperData);
         $this->helperData->expects($this->once())
             ->method('getIsShareable')
             ->with($this->linkPurchasedItem)
             ->willReturn(false);
         $this->session->expects($this->once())->method('getCustomerId')->willReturn(null);
+        $this->objectManager->expects($this->at(3))
+            ->method('create')
+            ->with(Product::class)
+            ->willReturn($this->product);
         $this->linkPurchasedItem->expects($this->once())->method('getProductId')->willReturn('product_id');
         $this->product->expects($this->once())->method('load')->with('product_id')->willReturnSelf();
         $this->product->expects($this->once())->method('getId')->willReturn('product_id');
@@ -227,14 +232,10 @@ class LinkTest extends TestCase
             ->method('addNotice')
             ->with('Please sign in to download your product or purchase <a href="product_url">product_name</a>.');
         $this->session->expects($this->once())->method('authenticate')->willReturn(true);
-        $this->objectManager
-            ->method('get')
-            ->withConsecutive([Session::class], [Data::class])
-            ->willReturnOnConsecutiveCalls($this->session, $this->helperData);
-        $this->objectManager
+        $this->objectManager->expects($this->at(4))
             ->method('create')
-            ->withConsecutive([Item::class], [Product::class], [UrlInterface::class])
-            ->willReturnOnConsecutiveCalls($this->linkPurchasedItem, $this->product, $this->urlInterface);
+            ->with(UrlInterface::class)
+            ->willReturn($this->urlInterface);
         $this->urlInterface->expects($this->once())
             ->method('getUrl')
             ->with('downloadable/customer/products/', ['_secure' => true])
@@ -244,30 +245,35 @@ class LinkTest extends TestCase
         $this->assertNull($this->link->execute());
     }
 
-    /**
-    * @return void
-    */
-    public function testGetLinkForWrongCustomer(): void
+    public function testGetLinkForWrongCustomer()
     {
+        $this->objectManager->expects($this->at(0))
+            ->method('get')
+            ->with(Session::class)
+            ->willReturn($this->session);
         $this->request->expects($this->once())->method('getParam')->with('id', 0)->willReturn('some_id');
+        $this->objectManager->expects($this->at(1))
+            ->method('create')
+            ->with(Item::class)
+            ->willReturn($this->linkPurchasedItem);
         $this->linkPurchasedItem->expects($this->once())
             ->method('load')
             ->with('some_id', 'link_hash')
             ->willReturnSelf();
         $this->linkPurchasedItem->expects($this->once())->method('getId')->willReturn(5);
+        $this->objectManager->expects($this->at(2))
+            ->method('get')
+            ->with(Data::class)
+            ->willReturn($this->helperData);
         $this->helperData->expects($this->once())
             ->method('getIsShareable')
             ->with($this->linkPurchasedItem)
             ->willReturn(false);
         $this->session->expects($this->once())->method('getCustomerId')->willReturn('customer_id');
-        $this->objectManager
-            ->method('get')
-            ->withConsecutive([Session::class], [Data::class])
-            ->willReturnOnConsecutiveCalls($this->session, $this->helperData);
-        $this->objectManager
+        $this->objectManager->expects($this->at(3))
             ->method('create')
-            ->withConsecutive([Item::class], [Purchased::class])
-            ->willReturnOnConsecutiveCalls($this->linkPurchasedItem, $this->linkPurchased);
+            ->with(Purchased::class)
+            ->willReturn($this->linkPurchased);
         $this->linkPurchasedItem->expects($this->once())->method('getPurchasedId')->willReturn('purchased_id');
         $this->linkPurchased->expects($this->once())->method('load')->with('purchased_id')->willReturnSelf();
         $this->linkPurchased->expects($this->once())->method('getCustomerId')->willReturn('other_customer_id');
@@ -282,26 +288,29 @@ class LinkTest extends TestCase
     /**
      * @param string $mimeType
      * @param string $disposition
-     *
-     * @return void
      * @dataProvider downloadTypesDataProvider
+     * @return void
      */
-    public function testExceptionInUpdateLinkStatus($mimeType, $disposition): void
+    public function testExceptionInUpdateLinkStatus($mimeType, $disposition)
     {
+        $this->objectManager->expects($this->at(0))
+            ->method('get')
+            ->with(Session::class)
+            ->willReturn($this->session);
         $this->request->expects($this->once())->method('getParam')->with('id', 0)->willReturn('some_id');
+        $this->objectManager->expects($this->at(1))
+            ->method('create')
+            ->with(Item::class)
+            ->willReturn($this->linkPurchasedItem);
         $this->linkPurchasedItem->expects($this->once())
             ->method('load')
             ->with('some_id', 'link_hash')
             ->willReturnSelf();
-        $this->objectManager
-            ->method('get')
-            ->withConsecutive([\Magento\Customer\Model\Session::class], [Data::class], [Download::class])
-            ->willReturnOnConsecutiveCalls($this->session, $this->helperData, $this->downloadHelper);
-        $this->objectManager
-            ->method('create')
-            ->withConsecutive([Item::class])
-            ->willReturnOnConsecutiveCalls($this->linkPurchasedItem);
         $this->linkPurchasedItem->expects($this->once())->method('getId')->willReturn(5);
+        $this->objectManager->expects($this->at(2))
+            ->method('get')
+            ->with(Data::class)
+            ->willReturn($this->helperData);
         $this->helperData->expects($this->once())
             ->method('getIsShareable')
             ->with($this->linkPurchasedItem)
@@ -331,14 +340,17 @@ class LinkTest extends TestCase
      * @param string $resourceType
      * @param string $mimeType
      * @param string $disposition
-     *
      * @return void
      */
-    private function processDownload($resource, $resourceType, $mimeType, $disposition): void
+    private function processDownload($resource, $resourceType, $mimeType, $disposition)
     {
         $fileSize = 58493;
         $fileName = 'link.jpg';
 
+        $this->objectManager->expects($this->at(3))
+            ->method('get')
+            ->with(Download::class)
+            ->willReturn($this->downloadHelper);
         $this->downloadHelper->expects($this->once())
             ->method('setResource')
             ->with($resource, $resourceType)
@@ -369,26 +381,28 @@ class LinkTest extends TestCase
      * @param string $messageType
      * @param string $status
      * @param string $notice
-     *
-     * @return void
      * @dataProvider linkNotAvailableDataProvider
      */
-    public function testLinkNotAvailable($messageType, $status, $notice): void
+    public function testLinkNotAvailable($messageType, $status, $notice)
     {
+        $this->objectManager->expects($this->at(0))
+            ->method('get')
+            ->with(Session::class)
+            ->willReturn($this->session);
         $this->request->expects($this->once())->method('getParam')->with('id', 0)->willReturn('some_id');
+        $this->objectManager->expects($this->at(1))
+            ->method('create')
+            ->with(Item::class)
+            ->willReturn($this->linkPurchasedItem);
         $this->linkPurchasedItem->expects($this->once())
             ->method('load')
             ->with('some_id', 'link_hash')
             ->willReturnSelf();
         $this->linkPurchasedItem->expects($this->once())->method('getId')->willReturn(5);
-        $this->objectManager
+        $this->objectManager->expects($this->at(2))
             ->method('get')
-            ->withConsecutive([Session::class], [Data::class])
-            ->willReturnOnConsecutiveCalls($this->session, $this->helperData);
-        $this->objectManager
-            ->method('create')
-            ->with(Item::class)
-            ->willReturn($this->linkPurchasedItem);
+            ->with(Data::class)
+            ->willReturn($this->helperData);
         $this->helperData->expects($this->once())
             ->method('getIsShareable')
             ->with($this->linkPurchasedItem)
@@ -404,31 +418,30 @@ class LinkTest extends TestCase
     /**
      * @param string $mimeType
      * @param string $disposition
-     *
-     * @return void
      * @dataProvider downloadTypesDataProvider
+     * @return void
      */
-    public function testContentDisposition($mimeType, $disposition): void
+    public function testContentDisposition($mimeType, $disposition)
     {
         $this->objectManager->expects($this->any())
             ->method('get')
             ->willReturnMap([
                 [
                     Session::class,
-                    $this->session
+                    $this->session,
                 ],
                 [
                     Data::class,
-                    $this->helperData
+                    $this->helperData,
                 ],
                 [
                     Download::class,
-                    $this->downloadHelper
-                ]
+                    $this->downloadHelper,
+                ],
             ]);
 
         $this->request->expects($this->once())->method('getParam')->with('id', 0)->willReturn('some_id');
-        $this->objectManager
+        $this->objectManager->expects($this->at(1))
             ->method('create')
             ->with(Item::class)
             ->willReturn($this->linkPurchasedItem);
@@ -475,7 +488,7 @@ class LinkTest extends TestCase
     /**
      * @return array
      */
-    public function linkNotAvailableDataProvider(): array
+    public function linkNotAvailableDataProvider()
     {
         return [
             ['addNotice', 'expired', 'The link has expired.'],
@@ -488,11 +501,11 @@ class LinkTest extends TestCase
     /**
      * @return array
      */
-    public function downloadTypesDataProvider(): array
+    public function downloadTypesDataProvider()
     {
         return [
             ['mimeType' => 'text/html',  'disposition' => Mime::DISPOSITION_ATTACHMENT],
-            ['mimeType' => 'image/jpeg', 'disposition' => Mime::DISPOSITION_INLINE]
+            ['mimeType' => 'image/jpeg', 'disposition' => Mime::DISPOSITION_INLINE],
         ];
     }
 }
